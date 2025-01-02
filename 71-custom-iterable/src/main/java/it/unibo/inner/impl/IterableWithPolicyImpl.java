@@ -1,56 +1,67 @@
 package it.unibo.inner.impl;
-import it.unibo.inner.api.*;
+
+import it.unibo.inner.api.Predicate;
+import it.unibo.inner.api.IterableWithPolicy;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.List;
 
-public class IterableWithPolicyImpl<T> implements IterableWithPolicy<T>  {
+public class IterableWithPolicyImpl<T> implements IterableWithPolicy<T> {
     private final T[] elements;
-    //private final Predicate<T> filter;
+    private Predicate<T> filter;
 
-    public IterableWithPolicyImpl(T[] elements){
-        if(elements == null){
-            throw new IllegalArgumentException("The array cannot be empty");
-        }
-        this.elements = elements;
-
+    @SuppressWarnings("unused")
+    public IterableWithPolicyImpl(final T[] elements) {
+        this(elements, t -> true); // Default filter: always true
     }
 
-    private class ArrayIterator implements Iterator<T>{
+    public IterableWithPolicyImpl(final T[] elements, Predicate<T> filter) {
+        if (elements == null || filter == null) {
+            throw new IllegalArgumentException("Neither filter nor array can be null");
+        }
+        this.elements = elements;
+        this.filter = filter;
+    }
 
+    private class ArrayIterator implements Iterator<T> {
         private int index = 0;
 
         @Override
         public boolean hasNext() {
-
-            return index < elements.length;
-            
+            while (index < elements.length) {
+                final T elem = elements[index];
+                if (filter.test(elem)) {
+                    return true;
+                }
+                index++;
+            }
+            return false;
         }
 
         @Override
         public T next() {
-            if(!hasNext()) throw new NoSuchElementException();
-
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
             return elements[index++];
-
         }
-        
+    }
 
-
-        }
-
-
-    public Iterator<T> iterator(){
-
+    @Override
+    public Iterator<T> iterator() {
         return new ArrayIterator();
     }
 
     @Override
+    public void setIterationPolicy(Predicate<T> filter) {
+        if (filter == null) {
+            throw new IllegalArgumentException("The filter must not be null");
+        }
+        this.filter = filter;
+    }
+
+    @Override
     public String toString() {
-    return List.of(elements).toString(); // Converts the array to a list and then to a string
-   }
-
-
-    public void setIterationPolicy(Predicate<T> filter){}
+        return List.of(elements).toString();
+    }
 }
-

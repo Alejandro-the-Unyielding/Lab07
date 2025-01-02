@@ -7,6 +7,7 @@ import java.util.Objects;
 /**
  * Utilities for testing.
  */
+@SuppressWarnings("unused")
 public final class Assertions {
 
     private static final String ERROR_HEADER = "# ERROR! ";
